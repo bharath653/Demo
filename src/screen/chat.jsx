@@ -12,6 +12,7 @@ const Chat = () => {
 const [loading, setLoading] = useState(false);
 const [hasMore, setHasMore] = useState(true); // To stop fetching when no more messages
 
+const [onlineUsers, setOnlineUsers] = useState({});
 
     // Function to initialize WebSocket connection
     const connectWebSocket = () => {
@@ -32,6 +33,16 @@ const [hasMore, setHasMore] = useState(true); // To stop fetching when no more m
             try {
                 const response = JSON.parse(event.data);
                 console.log("Parsed response:", response);
+                if (response?.type === "onlineUsers") {
+                    setOnlineUsers((prev) => {
+                        const onlineUsersMap = response.users.reduce((acc, userId) => {
+                            acc[userId] = true; // Mark user as online
+                            return acc;
+                        }, {});
+                        return { ...onlineUsersMap }; // Update state
+                    });
+                }
+                
                 
                 setMessages((prev) => [...prev, response]); // Append new message
             } catch (error) {
@@ -45,10 +56,19 @@ const [hasMore, setHasMore] = useState(true); // To stop fetching when no more m
             console.error("⚠️ WebSocket error:", error);
         };
 
+        // ws.onclose = () => {
+        //     console.log("❌ WebSocket Disconnected. Reconnecting in 3s...");
+        //     setTimeout(connectWebSocket, 3000); // Auto-reconnect after 3s
+        // };
+
         ws.onclose = () => {
             console.log("❌ WebSocket Disconnected. Reconnecting in 3s...");
-            setTimeout(connectWebSocket, 3000); // Auto-reconnect after 3s
+            setTimeout(() => {
+                setMessages([]); // Clear messages on reconnect
+                connectWebSocket();
+            }, 3000);
         };
+        
 
         setSocket(ws);
     };
@@ -93,18 +113,22 @@ const [hasMore, setHasMore] = useState(true); // To stop fetching when no more m
     const chatBoxRef = useRef(null);
 
     useEffect(() => {
+        if (!chatBoxRef.current) return;
+    
         const handleScroll = () => {
-            if (chatBoxRef.current?.scrollTop === 0 && hasMore && !loading) {
-                getMessages(page + 1,""); // Fetch older messages
+            console.log("selectedUserIdeeeeeeeee",selectedUserId,chatBoxRef.current.scrollTop,hasMore,loading);
+            
+            if (chatBoxRef.current.scrollTop === 0 && hasMore  && selectedUserId) {
+                console.log("Fetching more messages...");
+                getMessages(page + 1, selectedUserId);
             }
         };
-        console.log("scroll",chatBoxRef);
-
+    
         chatBoxRef.current?.addEventListener("scroll", handleScroll);
         return () => chatBoxRef.current?.removeEventListener("scroll", handleScroll);
 
-        
-    }, [page, hasMore]);
+    }, [page, hasMore, selectedUserId]); // Ensure it updates when the user changes
+    
 
     const getMessages = async (newPage = 1,user) => {
         console.log("llllll",newPage,user);
@@ -114,7 +138,7 @@ const [hasMore, setHasMore] = useState(true); // To stop fetching when no more m
     
         try {
             const res = await axios.get(`https://astrologycalcbackend-production.up.railway.app/ChatAPP/auth/getChat`, {
-                params: { receiverId: user ? user : selectedUserId, page: newPage, limit: 50 },
+                params: { receiverId: user, page: newPage, limit: 50 },
                 headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
             });
 
@@ -137,18 +161,22 @@ const [hasMore, setHasMore] = useState(true); // To stop fetching when no more m
             chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
         }
     }, [messages]);
-const getData=(user)=>{
-    console.log("hhhhhhhhhhhhhhhhhhhhhhhhhhh");
+
+    const getData = (user) => {
+        console.log("Fetching messages for:", user);
+        setMessages([]); // Clear messages when switching users
+        setPage(1); // Reset pagination
+        setSelectedUserId(user);
+        getMessages(1, user); // Fetch messages from page 1
+    };
     
-    getMessages(page,user);setSelectedUserId(user);
-}
     return (
         <Box sx={{ width: "400px", margin: "auto", mt: 5 }}>
             <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
                 Select a User to Chat
             </Typography>
             <Stack spacing={1} sx={{ mb: 2 }}>
-                {users?.map((user) => (
+                {/* {users?.map((user) => (
                     <Button
                         key={user._id}
                         variant={selectedUserId === user._id ? "contained" : "outlined"}
@@ -156,7 +184,24 @@ const getData=(user)=>{
                     >
                         {user.email}
                     </Button>
-                ))}
+                ))} */}
+
+{users?.map((user) => (
+    <Button
+        key={user._id}
+        variant={selectedUserId === user._id ? "contained" : "outlined"}
+        onClick={() =>{getData(user._id);setSelectedUserId(user._id);}}
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+    >
+        {user.email}{selectedUserId}
+        {onlineUsers[user._id] ? (
+            <span style={{ color: "green", fontSize: "12px" }}>● Online</span>
+        ) : (
+            <span style={{ color: "gray", fontSize: "12px" }}>● Offline</span>
+        )}
+    </Button>
+))}
+
             </Stack>
 
             <Paper sx={{ p: 2, borderRadius: 2 }}>
