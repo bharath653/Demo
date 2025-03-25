@@ -19,7 +19,7 @@ const Register = () => {
         setLoading(true); // Start loading state
 
         try {
-            const response = await axios.post("http://localhost:5000/ChatAPP/auth/register", {
+            const response = await axios.post("https://astrologycalcbackend-production.up.railway.app/ChatAPP/auth/register", {
                 name,
                 email,
                 password,

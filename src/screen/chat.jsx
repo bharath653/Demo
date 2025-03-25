@@ -16,8 +16,9 @@ const [hasMore, setHasMore] = useState(true); // To stop fetching when no more m
     // Function to initialize WebSocket connection
     const connectWebSocket = () => {
         const token = localStorage.getItem("authToken"); // Get token from localStorage
-    const ws = new WebSocket(`ws://localhost:5000?userId=${localStorage.getItem('user')}`); // Attach token as query param
-    
+    // const ws = new WebSocket(`ws://localhost:5000?userId=${localStorage.getItem('user')}`); // Attach token as query param
+    const ws = new WebSocket(`wss://astrologycalcbackend-production.up.railway.app?userId=${localStorage.getItem('user')}`);
+
 // WebSocket server URL
         
         ws.onopen = () => {
@@ -79,7 +80,7 @@ const [hasMore, setHasMore] = useState(true); // To stop fetching when no more m
 
     const getUsers = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/ChatAPP/auth/user", {
+            const res = await axios.get("https://astrologycalcbackend-production.up.railway.app/ChatAPP/auth/user", {
                 headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
             });
             setUsers(res.data.user);
@@ -112,7 +113,7 @@ const [hasMore, setHasMore] = useState(true); // To stop fetching when no more m
         setLoading(true);
     
         try {
-            const res = await axios.get(`http://localhost:5000/ChatAPP/auth/getChat`, {
+            const res = await axios.get(`https://astrologycalcbackend-production.up.railway.app/ChatAPP/auth/getChat`, {
                 params: { receiverId: user ? user : selectedUserId, page: newPage, limit: 50 },
                 headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
             });

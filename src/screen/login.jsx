@@ -11,7 +11,7 @@ const Login = () => {
     const handleLogin =async () => {
         const user = JSON.parse(localStorage.getItem("user"));
         if ( email &&  password) {
-            const response = await axios.post("http://localhost:5000/ChatAPP/auth/login", {
+            const response = await axios.post("https://astrologycalcbackend-production.up.railway.app/ChatAPP/auth/login", {
                 email,
                 password,
             });
