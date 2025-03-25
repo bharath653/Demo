@@ -43,7 +43,10 @@ const [onlineUsers, setOnlineUsers] = useState({});
                     });
                 }
                 
-                
+                console.log("hhhjjj",response);
+                if(response.status === "⚠️ Not Delivered"){
+                    setMessages((prev) => [...prev, {text:response.message,sender:event.data.message}]); // Append new message
+                }
                 setMessages((prev) => [...prev, response]); // Append new message
             } catch (error) {
                 console.error("Failed to parse WebSocket response:", event.data);
@@ -94,6 +97,8 @@ const [onlineUsers, setOnlineUsers] = useState({});
 
         const msgObj = { receiverId: selectedUserId, message };
         socket.send(JSON.stringify(msgObj));
+        console.log("Message sent:", msgObj);
+        
         setMessages((prev) => [...prev, msgObj]); // Show sent message
         setMessage("");
     };
